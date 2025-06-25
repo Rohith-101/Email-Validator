@@ -1,0 +1,97 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+
+*{
+   margin: 0;
+   padding: 0;
+   font-family: 'Poppins',sans-serif; 
+   
+}
+
+nav{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: black;
+    color: white;
+    padding: 16px;
+}
+
+ul{
+    display: flex;
+}
+
+nav li{
+    list-style:none;
+    padding: 0 15px;
+
+}
+.container{
+   margin: auto;
+   max-width: 80vw;
+   padding: 15px;
+}
+
+.container h1{
+    padding: 1px;
+}
+
+.email{
+   padding: 5px;
+   width: 400px;
+   padding-top: 5px;
+}
+
+#resultcont div::first-letter{
+   text-transform: uppercase;
+}
+
+.button{
+    background-color: black;
+    color: white;
+    padding: 2px;
+    border-radius: 12px;
+    width: 70px;
+}
+
+main{
+   min-height: 80vh;
+   padding: 3px;
+}
+
+ul li a{
+    color:white;
+    text-decoration: none;
+}
+
+ul li a:hover{
+    color: darkgrey;
+}
+
+footer{
+    display: flex;
+    background-color: black;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    padding: 10px;
+}
+
+@media only screen and (max-width:600px) {
+  body {
+    background-color: burlywood;    
+   }
+
+   .container{
+    font-size: 12px;
+   }
+
+   nav{
+    flex-direction: column;
+   }
+
+   
+}
