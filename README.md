@@ -16,18 +16,24 @@ A polished email reputation checker powered by Abstract API.
    ```bash
    npm install
    ```
-2. Create/update `.env`:
+2. Create `.env` from the template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Update `.env` with your credentials:
    ```env
-   ABSTRACT_API_KEY=your_key_here
+   ABSTRACT_API_KEY=your_abstract_api_key
    PORT=3000
    DEFAULT_EMAIL=example@domain.com
    ```
-3. Start server:
+4. Start server:
    ```bash
    npm start
    ```
-4. Open:
+5. Open:
    - `http://localhost:3000/`
+
+**Note:** Never commit `.env` to version control. The `.env.example` file shows the required variables.
 
 ## Netlify Deployment
 
