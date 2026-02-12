@@ -1,175 +1,212 @@
-const form = document.getElementById("validator-form");
-const emailInput = document.getElementById("email-input");
+const form = document.getElementById("emailForm");
+const emailInput = document.getElementById("username");
 const resultContainer = document.getElementById("resultcont");
-const statusBadge = document.getElementById("status-badge");
+const submitButton = document.getElementById("btn");
 
-const disposableDomains = new Set([
-  "mailinator.com",
-  "tempmail.com",
-  "10minutemail.com",
-  "guerrillamail.com",
-  "yopmail.com"
-]);
-
-const roleBasedPrefixes = new Set([
-  "admin",
-  "contact",
-  "help",
-  "info",
-  "noreply",
-  "sales",
-  "support"
-]);
-
-function updateStatusBadge(text, type) {
-  statusBadge.className = `status-badge ${type}`;
-  statusBadge.textContent = text;
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-function createCard(title, value, tone) {
+function renderError(message) {
+  resultContainer.innerHTML = `<p class="error">${escapeHtml(message)}</p>`;
+}
+
+function toTitleCase(text) {
+  return text
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatPrimitive(value) {
+  if (typeof value === "boolean") {
+    return `<span class="${value ? "pill-ok" : "pill-no"}">${value ? "Yes" : "No"}</span>`;
+  }
+
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  }
+
+  if (value === null || value === undefined || value === "") {
+    return "N/A";
+  }
+
+  return escapeHtml(String(value));
+}
+
+function flattenObject(obj, prefix = "", map = {}) {
+  Object.entries(obj || {}).forEach(([key, value]) => {
+    const currentKey = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenObject(value, currentKey, map);
+      return;
+    }
+    map[currentKey] = value;
+  });
+  return map;
+}
+
+function firstValue(dataMap, keys) {
+  for (const key of keys) {
+    if (key in dataMap && dataMap[key] !== null && dataMap[key] !== undefined && dataMap[key] !== "") {
+      return dataMap[key];
+    }
+  }
+  return null;
+}
+
+function riskLevelClass(level) {
+  const normalized = String(level || "").toLowerCase();
+  if (["low", "safe", "good", "valid"].includes(normalized)) return "metric-ok";
+  if (["medium", "moderate", "unknown"].includes(normalized)) return "metric-warn";
+  return "metric-bad";
+}
+
+function renderSummary(data) {
+  const map = flattenObject(data);
+  const deliverability = firstValue(map, [
+    "email_deliverability.status",
+    "email_deliverability.deliverability",
+    "email_deliverability.value"
+  ]);
+  const risk = firstValue(map, ["email_risk.level", "email_risk.risk", "email_risk.label"]);
+  const disposable = firstValue(map, [
+    "email_quality.is_disposable",
+    "email_quality.disposable",
+    "email_quality.is_disposable_email"
+  ]);
+  const freeProvider = firstValue(map, [
+    "email_sender.is_free_provider",
+    "email_sender.free_provider",
+    "email_domain.is_free"
+  ]);
+
+  const cards = [
+    {
+      label: "Deliverability",
+      value: deliverability || "Unknown",
+      className: riskLevelClass(deliverability)
+    },
+    {
+      label: "Risk",
+      value: risk || "Unknown",
+      className: riskLevelClass(risk)
+    },
+    {
+      label: "Disposable",
+      value: disposable === null ? "Unknown" : disposable ? "Yes" : "No",
+      className: disposable === null ? "metric-warn" : disposable ? "metric-bad" : "metric-ok"
+    },
+    {
+      label: "Free Provider",
+      value: freeProvider === null ? "Unknown" : freeProvider ? "Yes" : "No",
+      className: freeProvider === null ? "metric-warn" : "metric-ok"
+    }
+  ];
+
   return `
-    <article class="result-card ${tone}">
-      <h3>${title}</h3>
-      <p>${value}</p>
-    </article>
+    <div class="summary-grid">
+      ${cards
+        .map(
+          (card) => `
+            <div class="summary-card">
+              <p class="summary-label">${card.label}</p>
+              <p class="summary-value ${card.className}">${escapeHtml(card.value)}</p>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
   `;
 }
 
-function validateEmailQuality(rawEmail) {
-  const email = rawEmail.trim().toLowerCase();
-  const response = {
-    email,
-    isEmpty: email.length === 0,
-    hasAtSymbol: email.includes("@"),
-    syntaxValid: false,
-    domain: "",
-    localPart: "",
-    hasValidLength: email.length > 5 && email.length <= 254,
-    hasConsecutiveDots: email.includes(".."),
-    isDisposable: false,
-    isRoleBased: false,
-    hasTld: false,
-    score: 0
-  };
-
-  if (response.hasAtSymbol) {
-    const parts = email.split("@");
-    if (parts.length === 2) {
-      [response.localPart, response.domain] = parts;
-    }
-  }
-
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
-  response.syntaxValid = emailRegex.test(email);
-
-  response.hasTld = response.domain.includes(".") && !response.domain.endsWith(".");
-  response.isDisposable = disposableDomains.has(response.domain);
-  response.isRoleBased = roleBasedPrefixes.has(response.localPart);
-
-  let score = 0;
-  if (response.hasValidLength) score += 20;
-  if (response.syntaxValid) score += 35;
-  if (!response.hasConsecutiveDots) score += 15;
-  if (response.hasTld) score += 10;
-  if (!response.isDisposable) score += 10;
-  if (!response.isRoleBased) score += 10;
-  response.score = Math.max(0, Math.min(score, 100));
-
-  return response;
+function renderLoadingState() {
+  resultContainer.innerHTML = `
+    <div class="loading-grid">
+      <div class="loading-block"></div>
+      <div class="loading-block"></div>
+      <div class="loading-block"></div>
+    </div>
+  `;
 }
 
-function renderResults(result) {
-  if (result.isEmpty) {
-    updateStatusBadge("Input required", "error");
-    resultContainer.innerHTML = `
-      <article class="result-card bad">
-        <h3>Email Missing</h3>
-        <p>Enter an email address to begin validation.</p>
-      </article>
-    `;
+function renderRows(obj) {
+  return Object.entries(obj)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .map(([key, value]) => {
+      if (typeof value === "object" && !Array.isArray(value)) {
+        return `
+          <div class="result-block">
+            <div class="result-title">${toTitleCase(key)}</div>
+            ${renderRows(value)}
+          </div>
+        `;
+      }
+
+      const displayValue = Array.isArray(value)
+        ? value.length > 0
+          ? escapeHtml(
+              value
+                .map((item) => (typeof item === "object" ? JSON.stringify(item) : String(item)))
+                .join(", ")
+            )
+          : "N/A"
+        : formatPrimitive(value);
+
+      return `
+        <div class="result-row">
+          <div class="result-key">${toTitleCase(key)}</div>
+          <div class="result-value">${displayValue}</div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderResults(data) {
+  const detailHtml = renderRows(data);
+  const summaryHtml = renderSummary(data);
+  resultContainer.innerHTML = `${summaryHtml}${detailHtml || "<p>No result fields returned.</p>"}`;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  resultContainer.innerHTML = "";
+
+  const email = emailInput.value.trim();
+  if (!email) {
+    renderError("Please enter an email address.");
     return;
   }
 
-  const verdictText =
-    result.score >= 80
-      ? "Strong email quality"
-      : result.score >= 55
-        ? "Moderate quality"
-        : "Low quality";
+  submitButton.disabled = true;
+  submitButton.value = "Checking...";
+  renderLoadingState();
 
-  const verdictType =
-    result.score >= 80 ? "success" : result.score >= 55 ? "warning" : "error";
+  try {
+    const res = await fetch("/api/validate-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
 
-  updateStatusBadge(`${verdictText} (${result.score}/100)`, verdictType);
+    if (!res.ok || data.error) {
+      renderError(data.error || "Validation request failed.");
+      return;
+    }
 
-  resultContainer.innerHTML = [
-    createCard(
-      "Format",
-      result.syntaxValid ? "Valid standard format" : "Invalid format",
-      result.syntaxValid ? "good" : "bad"
-    ),
-    createCard(
-      "Length",
-      result.hasValidLength ? "Within recommended limits" : "Too short or too long",
-      result.hasValidLength ? "good" : "bad"
-    ),
-    createCard(
-      "Domain",
-      result.domain || "Not detected",
-      result.domain ? "good" : "bad"
-    ),
-    createCard(
-      "Top-Level Domain",
-      result.hasTld ? "Detected and valid" : "Missing or malformed",
-      result.hasTld ? "good" : "bad"
-    ),
-    createCard(
-      "Disposable Domain",
-      result.isDisposable ? "Yes, temporary provider detected" : "No disposable provider detected",
-      result.isDisposable ? "warn" : "good"
-    ),
-    createCard(
-      "Role-Based Account",
-      result.isRoleBased ? "Role account (e.g., support@)" : "Personal-style account",
-      result.isRoleBased ? "warn" : "good"
-    ),
-    createCard(
-      "Consecutive Dots",
-      result.hasConsecutiveDots ? "Found consecutive dots" : "No consecutive dots",
-      result.hasConsecutiveDots ? "bad" : "good"
-    ),
-    createCard(
-      "Recommendation",
-      result.score >= 80
-        ? "Ready for sign-up or contact forms."
-        : "Review address and improve format quality.",
-      result.score >= 80 ? "good" : "warn"
-    ),
-    createCard("Normalized Email", result.email, "good")
-  ].join("");
-}
-
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const validationResult = validateEmailQuality(emailInput.value);
-  renderResults(validationResult);
+    renderResults(data);
+  } catch (error) {
+    renderError("Unable to reach server. Please try again.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.value = "Validate";
+  }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

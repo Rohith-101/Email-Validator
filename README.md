@@ -1,30 +1,45 @@
-# Email Validator 
+# Email Validator
 
-
+A polished email reputation checker powered by Abstract API.
 
 ## Features
 
-- Professional and responsive UI with semantic layout
-- Client-side email format validation
-- Domain checks (including top-level domain presence)
-- Disposable email detection for popular temporary providers
-- Role-account flagging (`admin@`, `support@`, etc.)
-- Readiness score from 0 to 100 with actionable recommendations
+- Responsive, professional UI
+- Server-side API key handling (`.env`)
+- Email reputation check via Abstract API
+- Structured result rendering for nested API data
+- Summary insights for deliverability, risk, disposable, and provider type
 
-## Tech Stack
+## Setup
 
-- HTML5
-- CSS3 (custom properties, responsive grid, modern styling)
-- Vanilla JavaScript (modular validation + dynamic result rendering)
-
-## Run Locally
-
-1. Clone the repository:
+1. Install dependencies:
    ```bash
-   git clone https://github.com/Rohith-101/Email-Validator.git
+   npm install
    ```
-2. Open `index.html` in your browser.
+2. Create/update `.env`:
+   ```env
+   ABSTRACT_API_KEY=your_key_here
+   PORT=3000
+   DEFAULT_EMAIL=example@domain.com
+   ```
+3. Start server:
+   ```bash
+   npm start
+   ```
+4. Open:
+   - `http://localhost:3000/`
 
-## Project Goal
+## API Route
 
-This project demonstrates front-end engineering fundamentals: accessibility, clean structure, user feedback design, and practical input validation logic.
+- `POST /api/validate-email` with JSON body:
+  ```json
+  { "email": "name@example.com" }
+  ```
+- `GET /api/validate-email?email=name@example.com` (compat route)
+
+## Project Structure
+
+- `server.js` - Express server and API proxy
+- `index.html` - App markup
+- `css/style.css` - Styles
+- `js/script.js` - Client logic

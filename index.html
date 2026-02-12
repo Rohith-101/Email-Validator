@@ -3,77 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A professional email validation utility with syntax, domain, and quality checks.">
-  <title>Email Validator Pro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <title>Email Validator</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link href="./css/style.css" rel="stylesheet">
 </head>
 <body>
-  <header class="topbar">
-    <nav class="nav container">
-      <a class="brand" href="#" aria-label="Email Validator Pro Home">Email Validator <span>Pro</span></a>
-      <ul class="nav-links">
-        <li><a href="#validator">Validator</a></li>
-        <li><a href="#checks">Checks</a></li>
-        <li><a href="#result">Result</a></li>
+  <header>
+    <nav>
+      <div class="logo">Evalidate</div>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/">About</a></li>
+        <li><a href="/">Contact Us</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
-    <section class="hero container" id="validator">
-      <p class="eyebrow">Portfolio Project</p>
-      <h1>Validate Emails with Production-Style Feedback</h1>
-      <p class="subtitle">
-        Enter an email to run structure, domain, and quality checks. Built with semantic HTML, modern CSS, and modular JavaScript.
-      </p>
+    <div class="container app-shell">
+      <section class="hero">
+        <p class="eyebrow">Email Reputation Scanner</p>
+        <h1>Validate deliverability and risk signals in one check</h1>
+        <p class="subtitle">Analyze sender, domain quality, breaches, and risk posture from live API data.</p>
+        <form id="emailForm" class="form-row">
+          <label class="sr-only" for="username">Email address</label>
+          <input class="email" placeholder="Enter email address" type="email" id="username" name="username" required>
+          <input class="button" id="btn" type="submit" value="Validate">
+        </form>
+      </section>
 
-      <form id="validator-form" class="validator-card" novalidate>
-        <label for="email-input">Email Address</label>
-        <div class="field-row">
-          <input
-            id="email-input"
-            class="email-input"
-            type="email"
-            name="email"
-            autocomplete="email"
-            placeholder="name@company.com"
-            aria-describedby="email-help"
-            required
-          >
-          <button class="btn-primary" id="btn" type="submit">Validate</button>
-        </div>
-        <p id="email-help" class="helper-text">Tip: Try business and personal emails to compare quality signals.</p>
-      </form>
-    </section>
-
-    <section class="checks container" id="checks">
-      <article class="check-pill">RFC-style format checks</article>
-      <article class="check-pill">Disposable domain detection</article>
-      <article class="check-pill">Role-account flagging</article>
-      <article class="check-pill">Readiness score (0-100)</article>
-    </section>
-
-    <section class="result container" id="result">
-      <div class="result-header">
-        <h2>Validation Result</h2>
-        <p id="status-badge" class="status-badge neutral">Waiting for input</p>
-      </div>
-      <div id="resultcont" class="result-grid" aria-live="polite">
-        <article class="result-card placeholder">
-          <h3>No Data Yet</h3>
-          <p>Run validation to view detailed checks and recommendations.</p>
-        </article>
-      </div>
-    </section>
+      <section class="results-section">
+        <h2>Validation Results</h2>
+        <div id="resultcont"></div>
+      </section>
+    </div>
   </main>
 
   <footer>
-    <p>Built by Rohith | Email Validator Pro</p>
+    Copyright | All Rights Reserved
   </footer>
-
   <script src="./js/script.js"></script>
 </body>
 </html>
