@@ -1,0 +1,7 @@
+[functions]
+directory = "netlify/functions"
+
+[[redirects]]
+from = "/api/validate-email"
+to = "/.netlify/functions/validate-email"
+status = 200

@@ -29,6 +29,12 @@ A polished email reputation checker powered by Abstract API.
 4. Open:
    - `http://localhost:3000/`
 
+## Netlify Deployment
+
+- The frontend calls `POST /api/validate-email`.
+- In Netlify, this path is handled by `netlify/functions/validate-email.js` via `netlify.toml` redirect.
+- Set `ABSTRACT_API_KEY` (and optional `DEFAULT_EMAIL`) in Netlify environment variables.
+
 ## API Route
 
 - `POST /api/validate-email` with JSON body:
